@@ -1,1 +1,1 @@
-# Projeto-da-disciplina-de-LFAC---Simulador-de-Aut-matos
+# Projeto-da-disciplina-de-LFAC---Simulador-de-Automatos
