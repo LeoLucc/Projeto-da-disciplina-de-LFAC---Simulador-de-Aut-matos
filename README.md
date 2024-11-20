@@ -35,12 +35,10 @@ O Simulador de Autômatos é uma aplicação interativa desenvolvida para criar,
 
 ## Instruções sobre a interface:
 
-A interface utiliza a biblioteca **pygame**, portanto é necessário instalá-la (caso ainda não tenha) através do comando:
+A interface utiliza a biblioteca **pygame**, portanto é necessário instalá-la (caso ainda não tenha) através do comando: pip install pygame
 
-```bash
-pip install pygame
+## Funcionalidades principais:
 
-Funcionalidades principais:
 Definição de Transições
 
 Para definir uma transição:
@@ -48,21 +46,26 @@ Digite o símbolo de transição.
 Clique no estado de origem.
 Clique no estado de destino.
 (Para loops, basta clicar no mesmo estado duas vezes).
-Marcação de Estados
+
+## Marcação de Estados:
 
 As marcações de estado inicial e estado final devem ser feitas após definir as transições.
 Uma vez marcado o estado inicial, não é possível desmarcá-lo para escolher outro estado, a menos que o exclua.
-Botões de Testes
+
+## Botões de Testes:
 
 Os botões de testes ("Teste" e "Step Test") não funcionam enquanto um botão de construção do autômato estiver ativado.
 É necessário desativar os botões de construção antes de iniciar os testes.
-Tipos de Testes:
+
+## Tipos de Testes:
+
 Teste Rápido:
 Clique no botão Teste.
 Digite a entrada desejada.
 Pressione a tecla Enter para realizar o teste.
 O resultado será exibido na borda inferior da tela:
 Aceita (verde) ou Rejeitada (vermelho).
+
 Teste Passo a Passo:
 Clique no botão Step Test.
 Digite a entrada desejada.
@@ -70,5 +73,5 @@ Clique novamente no botão Step Test para iniciar a simulação.
 Os estados serão destacados durante a execução:
 Verde: Entrada aceita.
 Vermelho: Entrada rejeitada.
-Obrigado!
-```
+
+## Obrigado!
