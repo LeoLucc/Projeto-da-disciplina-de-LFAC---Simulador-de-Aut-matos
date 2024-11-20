@@ -8,7 +8,7 @@ pygame.init()
 # Definindo cores
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-YELLOW_LIGHT = (255, 255, 204)
+GRAY = (225, 225, 224)
 RED= (250,128,114)
 GREEN= (0,255,127)
 BUTTON_ACTIVE_COLOR = (100, 100, 100)
@@ -39,7 +39,7 @@ initial_state = None
 TOOLBAR_HEIGHT = 50
 
 # Definindo cores da barra de ferramentas
-TOOLBAR_COLOR = (240, 230, 50)
+TOOLBAR_COLOR = (255, 255, 90)
 BUTTON_COLOR = (255, 255, 255)
 
 # Definindo fonte para os botões
@@ -100,7 +100,7 @@ def draw_toolbar():
 def draw_states():
     for state in states:
         position, name, is_initial = state
-        color = YELLOW_LIGHT
+        color = GRAY
         if name in final_states:
             border_color = (0, 0, 0)
             pygame.draw.circle(window, border_color, position, RADIUS + 5, 3)  # Desenha uma borda mais grossa para estados finais
@@ -124,6 +124,8 @@ def draw_transitions():
     ARROW_LENGTH = 10  # Comprimento da ponta da seta
     CURVE_OFFSET = 20
 
+    text_offset = {}  # Dicionário para armazenar a posição do texto já desenhado para cada transição
+
     for transition in transitions:
         start_state_name = transition[0]
         end_state_name = transition[1]
@@ -134,8 +136,10 @@ def draw_transitions():
             start_pos = state_positions[start_state_name]
             end_pos = state_positions[end_state_name]
 
+            text_y_position = 0
+
+            # Desenhar a ponta da seta e o texto do loop
             if start_state_name == end_state_name:  # Caso seja um loop
-                # Calcular retângulo para o arco do loop
                 loop_rect = (
                     start_pos[0] - RADIUS + 5,  # Ajuste à esquerda
                     start_pos[1] - RADIUS * 2 + 5,  # Ajuste acima
@@ -150,7 +154,7 @@ def draw_transitions():
 
                 # Calcular a ponta da seta (fim do arco)
                 arc_end_x = loop_rect[0] + loop_rect[2] - 5  # Ponto mais à direita do retângulo
-                arc_end_y = loop_rect[1] + loop_rect[3] / 2 - 15 # Metade da altura (tangente ao arco na direita)
+                arc_end_y = loop_rect[1] + loop_rect[3] / 2 - 15  # Metade da altura (tangente ao arco na direita)
                 arrow_tip = (arc_end_x, arc_end_y)
 
                 # Calcular os lados da seta para desenhar a ponta
@@ -167,18 +171,23 @@ def draw_transitions():
                 # Desenhar a ponta da seta
                 pygame.draw.polygon(window, BLACK, [arrow_tip, arrow_left, arrow_right])
 
+                # Verificar se o texto já foi desenhado para esse loop
+                if (start_state_name, end_state_name) not in text_offset:
+                    text_offset[(start_state_name, end_state_name)] = -10  # Inicializar a posição Y do texto
+
                 # Exibir o símbolo da transição no meio do arco
                 text_surface = font.render(symbol, True, BLACK)
                 text_rect = text_surface.get_rect(
                     center=(
-                        start_pos[0], 
-                        start_pos[1] - RADIUS * 1.5  # Posição central do arco
+                        start_pos[0],
+                        start_pos[1] - RADIUS * 2 + text_offset[(start_state_name, end_state_name)]  # Ajuste na posição Y
                     )
                 )
                 window.blit(text_surface, text_rect)
+                text_offset[(start_state_name, end_state_name)] -= 10  # Ajuste da posição para o próximo loop
 
-            else:  # Caso seja uma transição entre dois estados
-                # Calcular o vetor direção
+            else:
+                # Caso não seja um loop, continue com a lógica normal para transições
                 dx = end_pos[0] - start_pos[0]
                 dy = end_pos[1] - start_pos[1]
                 distance = math.sqrt(dx**2 + dy**2)
@@ -187,7 +196,6 @@ def draw_transitions():
                 direction_x = dx / distance
                 direction_y = dy / distance
 
-                # Ajustar o ponto inicial e final para a borda dos círculos e a ponta da seta
                 start_arrow = (
                     start_pos[0] + (RADIUS + ARROW_LENGTH) * direction_x,
                     start_pos[1] + (RADIUS + ARROW_LENGTH) * direction_y
@@ -197,7 +205,6 @@ def draw_transitions():
                     end_pos[1] - (RADIUS + ARROW_LENGTH) * direction_y
                 )
 
-                # Desenhar linha de conexão
                 pygame.draw.line(window, BLACK, start_arrow, end_arrow, 2)
 
                 # Desenhar a ponta da seta
@@ -213,14 +220,30 @@ def draw_transitions():
                 )
 
                 pygame.draw.polygon(window, BLACK, [arrow_tip, arrow_left, arrow_right])
-
-                # Exibir o símbolo da transição
+            # Determina a posição inicial do texto
                 text_x = (start_pos[0] + end_pos[0]) // 2
-                text_y = (start_pos[1] + end_pos[1]) // 2 - 10
-                text_surface = font.render(symbol, True, BLACK)
-                text_rect = text_surface.get_rect(center=(text_x, text_y))
-                window.blit(text_surface, text_rect)
 
+                # Se já houver uma transição entre os mesmos estados, ajusta a posição Y
+                if (start_state_name, end_state_name) in text_offset:
+                    if end_pos[0] > start_pos[0]:  # Da esquerda para a direita
+                        text_y = (start_pos[1] + end_pos[1]) // 2 - 10
+                        text_y_position = text_offset[(start_state_name, end_state_name)]
+                        text_offset[(start_state_name, end_state_name)] -= 10
+                    else:  # Da direita para a esquerda
+                        text_y = (start_pos[1] + end_pos[1]) // 2 + 20
+                        text_y_position = text_offset[(start_state_name, end_state_name)] - 10
+                        text_offset[(start_state_name, end_state_name)] += 10
+                else:
+                    if end_pos[0] > start_pos[0]:  # Da esquerda para a direita
+                        text_y = (start_pos[1] + end_pos[1]) // 2 - 10
+                        text_offset[(start_state_name, end_state_name)] = -10
+                    else:  # Da direita para a esquerda
+                        text_y = (start_pos[1] + end_pos[1]) // 2 + 10
+                        text_offset[(start_state_name, end_state_name)] = 10
+
+                text_surface = font.render(symbol, True, BLACK)
+                text_rect = text_surface.get_rect(center=(text_x, text_y + text_y_position))
+                window.blit(text_surface, text_rect)
 
 # Função para desenhar texto
 def draw_text(text, color, x, y):
