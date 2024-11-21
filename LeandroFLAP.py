@@ -93,7 +93,12 @@ def draw_toolbar():
     pygame.draw.rect(window, BUTTON_COLOR, step_test_button)
     draw_text("Step Test", BLACK, step_test_button.x + 10, step_test_button.y + 5)
 
-    return create_state_button, create_transition_button, delete_button, set_initial_button, set_final_button, test_word_button, step_test_button
+     # Botão para converter AFND em AFD
+    convert_to_afd_button = pygame.Rect(600, 10, 160, 30)
+    pygame.draw.rect(window, BUTTON_COLOR, convert_to_afd_button)
+    draw_text("Converter em AFD", BLACK, convert_to_afd_button.x + 10, convert_to_afd_button.y + 5)
+
+    return create_state_button, create_transition_button, delete_button, set_initial_button, set_final_button, test_word_button, step_test_button, convert_to_afd_button
 
 
 # Função para desenhar os estados
@@ -337,6 +342,7 @@ def test_word(word):
             return False
     # Verifica se o estado atual após processar toda a palavra é um estado final
     return current_state in final_states
+
 def get_user_input():
     user_input = ""
     input_active = True
@@ -357,6 +363,7 @@ def get_user_input():
         draw_text("Pressione Enter para testar a palavra", BLACK, 10, 550)
         pygame.display.flip()
     return user_input
+
 def get_user_input_2():
     user_input = ""
     input_active = True
@@ -389,6 +396,90 @@ def get_user_input_2():
         pygame.display.flip()
     return user_input
 
+def reposition_states():
+    """Reposiciona os estados para evitar sobreposição e centralizar o layout."""
+    center_x, center_y = WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2  # Centro da tela
+    radius = 200  # Raio da circunferência
+    angle_increment = 360 // max(1, len(states))  # Ângulo entre os estados
+
+    for i, state in enumerate(states):
+        angle = math.radians(i * angle_increment)  # Converte o ângulo para radianos
+        x = int(center_x + radius * math.cos(angle))  # Calcula posição X
+        y = int(center_y + radius * math.sin(angle))  # Calcula posição Y
+        states[i] = ((x, y), state[1], state[2])  # Atualiza com a nova posição
+
+
+def convert_afnd_to_afd():
+    global states, transitions, initial_state, final_states
+
+    # Conjunto de símbolos (alfabeto) do autômato
+    alphabet = {t[2] for t in transitions if t[2] != ''}
+
+    # Estados do AFD e transições resultantes
+    afd_states = []
+    afd_transitions = []
+    afd_final_states = set()
+
+    # Mapear conjuntos de estados do AFND para nomes no AFD
+    state_mapping = {}
+    state_count = 0
+
+    # Função para nomear novos estados do AFD
+    def get_afd_state_name(state_set):
+        nonlocal state_count
+        if state_set not in state_mapping:
+            state_name = f"Q{state_count}"
+            state_mapping[state_set] = state_name
+            state_count += 1
+        return state_mapping[state_set]
+
+    # Inicializar o estado inicial do AFD
+    initial_set = frozenset([initial_state])
+    initial_afd_state = get_afd_state_name(initial_set)
+    afd_states.append((None, initial_afd_state, True))  # Estado inicial
+
+    # Estrutura de dados para processar os estados do AFD
+    queue = [initial_set]
+    visited = set()
+
+    while queue:
+        current_set = queue.pop(0)
+        visited.add(current_set)
+
+        current_afd_state = get_afd_state_name(current_set)
+
+        # Verificar se é estado final
+        if any(state in final_states for state in current_set):
+            afd_final_states.add(current_afd_state)
+
+        # Criar transições para cada símbolo do alfabeto
+        for symbol in alphabet:
+            next_set = set()
+            for state in current_set:
+                next_set.update({t[1] for t in transitions if t[0] == state and t[2] == symbol})
+
+            if next_set:
+                next_set = frozenset(next_set)
+                next_afd_state = get_afd_state_name(next_set)
+                afd_transitions.append((current_afd_state, next_afd_state, symbol))
+
+                if next_set not in visited and next_set not in queue:
+                    queue.append(next_set)
+
+    # Atualizar as listas globais com os estados e transições do AFD
+    states = [(None, name, name == initial_afd_state) for name in state_mapping.values()]
+    transitions = afd_transitions
+    final_states.clear()
+    final_states.update(afd_final_states)
+
+    reposition_states()
+
+    print("Conversão concluída!")
+    print("Estados do AFD:", states)
+    print("Transições do AFD:", transitions)
+    print("Estados finais do AFD:", final_states)
+
+
 # Função principal do programa
 def main():
     global states, transitions, input_text, final_states, initial_state, word_test_result, step_test_word_result
@@ -406,7 +497,7 @@ def main():
     while running:
         window.fill(WHITE)
 
-        create_state_button, create_transition_button, delete_button, set_initial_button, set_final_button, test_word_button, step_test_button = draw_toolbar()
+        create_state_button, create_transition_button, delete_button, set_initial_button, set_final_button, test_word_button, step_test_button, convert_to_afd_button = draw_toolbar()
 
 
         for event in pygame.event.get():
@@ -414,6 +505,14 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
+
+                # Verifica se o clique foi no botão "Converter em AFD"
+                if convert_to_afd_button.collidepoint(pos):
+                    try:
+                        convert_afnd_to_afd()
+                    except Exception as e:
+                        print(f"Erro ao converter AFND para AFD: {e}")
+
                 if create_state_button.collidepoint(pos):
                     create_state_active = not create_state_active
                     create_transition_active = False
