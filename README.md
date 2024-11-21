@@ -52,6 +52,9 @@ Clique no estado de destino.
 As marcações de estado inicial e estado final devem ser feitas após definir as transições.
 Uma vez marcado o estado inicial, não é possível desmarcá-lo para escolher outro estado, a menos que o exclua.
 
+## Conversão de AFN para AFD:
+O autômato só poderá ser convertido houver estado final e inicial.
+
 ## Botões de Testes:
 
 Os botões de testes ("Teste" e "Step Test") não funcionam enquanto um botão de construção do autômato estiver ativado.
