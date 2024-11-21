@@ -53,7 +53,7 @@ As marcações de estado inicial e estado final devem ser feitas após definir a
 Uma vez marcado o estado inicial, não é possível desmarcá-lo para escolher outro estado, a menos que o exclua.
 
 ## Conversão de AFN para AFD:
-O autômato só poderá ser convertido houver estado final e inicial.
+O autômato só poderá ser convertido se houver estado final e inicial.
 
 ## Botões de Testes:
 
